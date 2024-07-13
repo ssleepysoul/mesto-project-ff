@@ -1,27 +1,26 @@
-import { openPopup } from "./modal";
-
-export function addCard (cardData, deleteCardFn, cardTemplate, openImagePopupFn, likeCard) {
-  const cardElement = cardTemplate.querySelector('.card').cloneNode(true);
+export function addCard (cardParams) {
+  const cardElement = cardParams.cardTemplate.querySelector('.card').cloneNode(true);
   const cardTitle = cardElement.querySelector('.card__title');
-  cardTitle.textContent = cardData.name;
+  cardTitle.textContent = cardParams.cardData.name;
   const cardImage = cardElement.querySelector('.card__image');
-  cardImage.src = cardData.link;
-  cardImage.alt = cardData.name;
+  cardImage.src = cardParams.cardData.link;
+  cardImage.alt = cardParams.cardData.name;
   const buttonDelete = cardElement.querySelector('.card__delete-button');
   const popupImage = document.querySelector('.popup_type_image');
   const image = popupImage.querySelector('.popup__image');
   const like = cardElement.querySelector('.card__like-button');
+  const imageCaption = popupImage.querySelector('.popup__caption');
 
   buttonDelete.addEventListener('click', function () {
-    deleteCardFn(cardElement);
+    cardParams.deleteCardFn(cardElement);
   });
 
   cardImage.addEventListener('click', function() {
-    openImagePopupFn(image, cardImage);
+    cardParams.openImagePopupFn(image, cardImage, imageCaption);
   })
 
   like.addEventListener('click', function () {
-    likeCard (like);
+    cardParams.likeCard (like);
   })
 
   return cardElement;
@@ -30,17 +29,6 @@ export function addCard (cardData, deleteCardFn, cardTemplate, openImagePopupFn,
 export function deleteCard (cardElement) {
   cardElement.remove();
 } // функция удаления карточки
-
-export function addNewCard (cardTemplate, cardListElement, openImagePopup) {
-  const placeName = document.querySelector('.popup__input_type_card-name');
-  const linkImage = document.querySelector('.popup__input_type_url');
-  const cardData = {
-    name: placeName.value,
-    link: linkImage.value
-  };
-  const cardElement = addCard(cardData, deleteCard, cardTemplate, openImagePopup, likeCard);
-  cardListElement.prepend(cardElement);
-} // функция добавления новой карточки через попап добавления
 
 
 export function likeCard (likeElement) {
