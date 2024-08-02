@@ -25,3 +25,21 @@
     line-height: 17px;
   }
 }
+
+.popup__button_disabled {
+  background: #FFFFFF;
+  color: #000000;
+  opacity: 0.2;
+  border: 1px solid #000000;
+}
+
+.popup__button_disabled:hover {
+  background: #FFFFFF;
+}
+
+
+.popup__button-edit-avatar {
+  margin-top: 48px;
+}
+
+
