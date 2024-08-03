@@ -1,4 +1,3 @@
-import { openPopup } from "./modal";
 
 export function addCard (cardParams) {
   const cardElement = cardParams.cardTemplate.querySelector('.card').cloneNode(true);
@@ -8,10 +7,8 @@ export function addCard (cardParams) {
   cardImage.src = cardParams.cardData.link;
   cardImage.alt = cardParams.cardData.name;
   const buttonDelete = cardElement.querySelector('.card__delete-button');
-  const popupImage = document.querySelector('.popup_type_image');
-  const image = popupImage.querySelector('.popup__image');
   const like = cardElement.querySelector('.card__like-button');
-  const imageCaption = popupImage.querySelector('.popup__caption');
+  const likeCounter = cardElement.querySelector('.card__like-counter');
 
   cardElement.setAttribute('data-id', `${cardParams.cardData._id}`);
   let cardLikes = cardParams.cardData.likes.map(function(item) {
@@ -36,19 +33,52 @@ export function addCard (cardParams) {
   }
     
   buttonDelete.addEventListener('click', function (evt) {
-    const popupConfirm = document.querySelector('.popup_type_confirm');
-    let cardElem = evt.target.closest('.card');
-    let cardId = cardElem.dataset.id; // получение значения атрибута из cardElement
-    popupConfirm.setAttribute('data-card-id', `${cardId}`);
-    openPopup(popupConfirm);
+    cardParams.openDeleteConfirmPopup(cardParams.cardData._id)
   });
 
   cardImage.addEventListener('click', function() {
-    cardParams.openImagePopupFn(image, cardImage, imageCaption);
+    cardParams.openImagePopupFn(cardImage.src, cardImage.alt);
   })
 
   like.addEventListener('click', function () {
-    cardParams.likeCard (like);
+    const likeCardId = cardElement.dataset.id;
+    const likesId = cardElement.dataset.idLikes;
+    if(likesId.includes(cardParams.profileId)) {
+      cardParams.deleteLike(likeCardId)
+      .then((result) => {
+        like.classList.remove('card__like-button_is-active');
+        let cardLikes = result.likes.map(function(item) {
+          return item._id
+        }).join(',');
+        cardElement.setAttribute('data-id-likes', cardLikes);
+        if(result.likes.length === 0){
+          likeCounter.classList.add('visibility-hidden');
+        } else {
+          likeCounter.textContent = result.likes.length;
+          likeCounter.classList.remove('visibility-hidden');
+        }
+      })
+      .catch((err) => {
+        console.log(err); // выводим ошибку в консоль
+      }); 
+    } else {
+      cardParams.putLike(likeCardId)
+      .then((result) => {
+        like.classList.add('card__like-button_is-active');
+        let cardLikes = result.likes.map(function(item) {
+          return item._id
+        }).join(',');
+        cardElement.setAttribute('data-id-likes', cardLikes);
+        if(result.likes.length > 0){
+          likeCounter.textContent = result.likes.length;
+          likeCounter.classList.remove('visibility-hidden');
+        }
+      })
+      .catch((err) => {
+        console.log(err); // выводим ошибку в консоль
+      }); 
+    }
+    // cardParams.likeCard (like);
   })
 
   return cardElement;
@@ -57,5 +87,3 @@ export function addCard (cardParams) {
 export function deleteCard (cardElement) {
   cardElement.remove();
 } // функция удаления карточки
-
-

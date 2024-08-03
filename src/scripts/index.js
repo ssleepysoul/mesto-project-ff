@@ -14,6 +14,8 @@ const profileDescription = document.querySelector('.profile__description');
 const profileAvatar = document.querySelector('.profile__image');
 const buttonAddNewCard = document.querySelector('.profile__add-button');
 const popupImage = document.querySelector('.popup_type_image');
+const popupImageImage = popupImage.querySelector('.popup__image');
+const popupImageCaption = popupImage.querySelector('.popup__caption');
 const popupImageCloseButton = popupImage.querySelector('.popup__close');
 const popupNewCard = document.querySelector('.popup_type_new-card');
 const popupNewCardForm = popupNewCard.querySelector('.popup__form');
@@ -76,11 +78,13 @@ popupEditForm.addEventListener('submit', function (event) {
     profileTitle.textContent = result.name;
     profileDescription.textContent = result.about;
     closePopup(popupEdit);
-    processSavingStop(popupEditForm);
   })
   .catch((err) => {
     console.log(err); // выводим ошибку в консоль
-  });
+  })
+  .finally(() => {
+    processSavingStop(popupEditForm);
+  })
 }) //отправка запроса на сервер с обновленной информацией о пользователе
 
 buttonAddNewCard.addEventListener('click', function(){
@@ -94,27 +98,32 @@ popupNewCardForm.addEventListener('submit', function (event) {
   processSavingStart(popupNewCardForm);
   postNewCard (popupNewCardName.value, popupNewCardImageUrl.value)
   .then((result) => {
-    addNewCard(cardTemplate, openImagePopup, result);
+    addNewCard(cardTemplate, openCardImage, result);
     closePopup(popupNewCard);
     popupNewCardForm.reset();
-    processSavingStop(popupNewCardForm);
   })
   .catch((err) => {
     console.log(err); // выводим ошибку в консоль
-  }); 
+  })
+  .finally(() => {
+    processSavingStop(popupNewCardForm);
+  })
 }); // слушатель для добавления новой карточки 
 
-function addNewCard (cardTemplate, openImagePopup, result) {
+function addNewCard (cardTemplate, openCardImage, result) {
+  const profileId = document.body.dataset.userId;
   const addNewCardParams = {
     cardData: result,
     deleteCardFn: deleteCard, 
     cardTemplate,
-    openImagePopupFn: openImagePopup, 
-    likeCard: toggleLike,
+    openImagePopupFn: openCardImage, 
+    openPopup,
+    profileId,
+    deleteLike,
+    putLike,
+    openDeleteConfirmPopup
   };
   const cardElement = addCard(addNewCardParams);
-  const deleteButton = cardElement.querySelector('.card__delete-button');
-  deleteButton.setAttribute('style', 'display:block')
   cardList.prepend(cardElement);
 }// функция добавления новой карточки через попап добавления
 
@@ -128,12 +137,6 @@ popupNewCard.addEventListener('click', function (event) {
   }
 }); //функция закрытия попапа по клику на фон
 
-function openImagePopup(image, cardImage, imageCaption) {
-  image.src = cardImage.src;
-  image.alt = cardImage.alt;
-  imageCaption.textContent = cardImage.alt;
-  openPopup(popupImage);
-} // открытие картинки
 
 popupImageCloseButton.addEventListener('click', function () {
   closePopup(popupImage);
@@ -166,9 +169,12 @@ Promise.all([
         cardData, 
         deleteCardFn: deleteCard, 
         cardTemplate, 
-        openImagePopupFn: openImagePopup, 
-        likeCard: toggleLike,
-        profileId
+        openImagePopupFn: openCardImage, 
+        profileId,
+        openPopup,
+        deleteLike,
+        putLike,
+        openDeleteConfirmPopup
     };
       const cardElement = addCard(addCardParams);
       cardList.append(cardElement);
@@ -196,58 +202,12 @@ popupConfirmButton.addEventListener('click', function(evt) {
   .then((result) => {
     let deleteCard = document.querySelector(`[data-id="${cardId}"]`);
     deleteCard.remove();
+    closePopup(popupConfirm);
   })
   .catch((err) => {
     console.log(err); // выводим ошибку в консоль
   }); 
-  closePopup(popupConfirm);
 }) //удаление карточки в попапе подтверждения удаления
-
-
-function toggleLike(likeElement) {
-  const userId = document.body.dataset.userId;
-  let likeCard = likeElement.closest('.card');
-  let likeCardId = likeCard.dataset.id;
-  const likesId = likeCard.dataset.idLikes;
-  if(likesId.includes(userId)) {
-    deleteLike(likeCardId)
-    .then((result) => {
-      likeElement.classList.remove('card__like-button_is-active');
-      let cardLikes = result.likes.map(function(item) {
-        return item._id
-      }).join(',');
-      likeCard.setAttribute('data-id-likes', cardLikes);
-      if(result.likes.length === 0){
-        const likeCounter = likeCard.querySelector('.card__like-counter');
-        likeCounter.classList.add('visibility-hidden');
-      } else {
-        const likeCounter = likeCard.querySelector('.card__like-counter');
-        likeCounter.textContent = result.likes.length;
-        likeCounter.classList.remove('visibility-hidden');
-      }
-    })
-    .catch((err) => {
-      console.log(err); // выводим ошибку в консоль
-    }); 
-  } else {
-    putLike(likeCardId)
-    .then((result) => {
-      likeElement.classList.add('card__like-button_is-active');
-      let cardLikes = result.likes.map(function(item) {
-        return item._id
-      }).join(',');
-      likeCard.setAttribute('data-id-likes', cardLikes);
-      if(result.likes.length > 0){
-        const likeCounter = likeCard.querySelector('.card__like-counter');
-        likeCounter.textContent = result.likes.length;
-        likeCounter.classList.remove('visibility-hidden');
-      }
-    })
-    .catch((err) => {
-      console.log(err); // выводим ошибку в консоль
-    }); 
-  }
-}//функция для постановки и снятия лайка
 
 
 profileAvatar.addEventListener('click', function() {
@@ -274,10 +234,12 @@ popupEditAvatarForm.addEventListener('submit', function(event) {
   .then((result) => {
     profileAvatar.style.backgroundImage = `url(${result.avatar})`;
     closePopup(popupEditAvatar);
-    processSavingStop(popupEditAvatarForm);
   })
   .catch((err) => {
     console.log(err); // выводим ошибку в консоль
+  })
+  .finally(() => {
+    processSavingStop(popupEditAvatarForm);
   })
 }) //отправка формы на изменение аватара
 
@@ -291,4 +253,17 @@ function processSavingStop(formElement) {
     const button = formElement.querySelector('.popup__button');
     button.textContent = 'Сохранить'
   }, 400)
+}
+
+
+function openCardImage(cardImageSrc, cardImageAlt) {
+  popupImageImage.src = cardImageSrc;
+  popupImageImage.alt = cardImageAlt;
+  popupImageCaption.textContent = cardImageAlt;
+  openPopup(popupImage);
+}
+
+function openDeleteConfirmPopup(cardId) {
+  popupConfirm.setAttribute('data-card-id', `${cardId}`);
+  openPopup(popupConfirm);
 }
