@@ -1,6 +1,6 @@
 
 // import {initialCards} from './cards'
-import {addCard, deleteCard, likeCard} from './card.js'
+import {addCard, toggleLike} from './card.js'
 import {openPopup, closePopup} from './modal.js'
 import {enableValidation, clearValidation} from './validation.js';
 import {editProfile, postNewCard, getProfileInfo, getCardsInfo, deletingCard, deleteLike, putLike, patchAvatar} from './api.js';
@@ -114,14 +114,14 @@ function addNewCard (cardTemplate, openCardImage, result) {
   const profileId = document.body.dataset.userId;
   const addNewCardParams = {
     cardData: result,
-    deleteCardFn: deleteCard, 
     cardTemplate,
     openImagePopupFn: openCardImage, 
     openPopup,
     profileId,
     deleteLike,
     putLike,
-    openDeleteConfirmPopup
+    openDeleteConfirmPopup,
+    toggleLike
   };
   const cardElement = addCard(addNewCardParams);
   cardList.prepend(cardElement);
@@ -167,14 +167,14 @@ Promise.all([
     cards.forEach(function (cardData) {
       const addCardParams = {
         cardData, 
-        deleteCardFn: deleteCard, 
         cardTemplate, 
         openImagePopupFn: openCardImage, 
         profileId,
         openPopup,
         deleteLike,
         putLike,
-        openDeleteConfirmPopup
+        openDeleteConfirmPopup,
+        toggleLike
     };
       const cardElement = addCard(addCardParams);
       cardList.append(cardElement);

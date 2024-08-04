@@ -41,49 +41,58 @@ export function addCard (cardParams) {
   })
 
   like.addEventListener('click', function () {
-    const likeCardId = cardElement.dataset.id;
-    const likesId = cardElement.dataset.idLikes;
-    if(likesId.includes(cardParams.profileId)) {
-      cardParams.deleteLike(likeCardId)
+    const toggleLikeParams = {
+      cardElement,
+      profileId: cardParams.profileId,
+      deleteLike: cardParams.deleteLike,
+      like,
+      likeCounter,
+      putLike: cardParams.putLike,
+    }
+    cardParams.toggleLike(toggleLikeParams)
+  })
+
+  return cardElement;
+} // функция добавления карточек 
+
+
+export function toggleLike(toggleLikeParams) {
+  const likeCardId = toggleLikeParams.cardElement.dataset.id;
+    const likesId = toggleLikeParams.cardElement.dataset.idLikes;
+    if(likesId.includes(toggleLikeParams.profileId)) {
+      toggleLikeParams.deleteLike(likeCardId)
       .then((result) => {
-        like.classList.remove('card__like-button_is-active');
+        toggleLikeParams.like.classList.remove('card__like-button_is-active');
         let cardLikes = result.likes.map(function(item) {
           return item._id
         }).join(',');
-        cardElement.setAttribute('data-id-likes', cardLikes);
+        toggleLikeParams.cardElement.setAttribute('data-id-likes', cardLikes);
         if(result.likes.length === 0){
-          likeCounter.classList.add('visibility-hidden');
+          toggleLikeParams.likeCounter.classList.add('visibility-hidden');
         } else {
-          likeCounter.textContent = result.likes.length;
-          likeCounter.classList.remove('visibility-hidden');
+          toggleLikeParams.likeCounter.textContent = result.likes.length;
+          toggleLikeParams.likeCounter.classList.remove('visibility-hidden');
         }
       })
       .catch((err) => {
         console.log(err); // выводим ошибку в консоль
       }); 
     } else {
-      cardParams.putLike(likeCardId)
+      toggleLikeParams.putLike(likeCardId)
       .then((result) => {
-        like.classList.add('card__like-button_is-active');
+        toggleLikeParams.like.classList.add('card__like-button_is-active');
         let cardLikes = result.likes.map(function(item) {
           return item._id
         }).join(',');
-        cardElement.setAttribute('data-id-likes', cardLikes);
+        toggleLikeParams.cardElement.setAttribute('data-id-likes', cardLikes);
         if(result.likes.length > 0){
-          likeCounter.textContent = result.likes.length;
-          likeCounter.classList.remove('visibility-hidden');
+          toggleLikeParams.likeCounter.textContent = result.likes.length;
+          toggleLikeParams.likeCounter.classList.remove('visibility-hidden');
         }
       })
       .catch((err) => {
         console.log(err); // выводим ошибку в консоль
       }); 
     }
-    // cardParams.likeCard (like);
-  })
+}
 
-  return cardElement;
-} // функция добавления карточек 
-
-export function deleteCard (cardElement) {
-  cardElement.remove();
-} // функция удаления карточки
